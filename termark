@@ -1,0 +1,52 @@
+#! /bin/bash
+
+# Create a new bookmark
+function mark() {
+  bookmark_name=$1
+  bookmark_path=$(pwd)
+
+  # Check if the directory exists
+  if [ ! -d ~/.bookmarks ]; then
+    mkdir ~/.bookmarks
+  fi
+
+  echo $bookmark_path > ~/.bookmarks/$bookmark_name
+  echo "Bookmark '$bookmark_name' created"
+}
+
+# Navigate to a bookmarked directory
+function go() {
+  local bookmark_name="$1"
+  
+  bookmark_path=$(cat ~/.bookmarks/$bookmark_name)
+  cd "$bookmark_path"
+}
+
+# Tab completion function for the go command
+function _go() {
+  local bookmarks_list=$(ls ~/.bookmarks | sed 's/^\(.*\)$/ \1/')
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  COMPREPLY=( $(compgen -W "$bookmarks_list" -- "$cur") )
+  return 0
+}
+
+# Enable tab-completion for the go command
+complete -F _go go
+
+# List all bookmarks
+function marks() {
+  echo "Bookmarks:"
+  for bookmark_file in ~/.bookmarks/*; do
+    local bookmark_name=$(basename "$bookmark_file")
+    local bookmark_path=$(cat "$bookmark_file")
+    echo "$bookmark_name  $bookmark_path/"
+  done
+}
+
+# Delete a bookmark
+function unmark() {
+  bookmark_name=$1
+  bookmark_path=$(cat ~/.bookmarks/$bookmark_name)
+  rm ~/.bookmarks/$bookmark_name
+  echo "Bookmark '$bookmark_name' deleted"
+}
